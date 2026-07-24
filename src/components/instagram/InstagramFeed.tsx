@@ -10,7 +10,7 @@ const FILTERS: { key: TransportMode | "all"; label: string; emoji: string }[] = 
   { key: "flight", label: "Flights", emoji: "✈️" },
   { key: "boat", label: "Boat", emoji: "⛵" },
   { key: "train", label: "Train", emoji: "🚂" },
-  { key: "road", label: "Road", emoji: "🚗" },
+  { key: "drive", label: "Road", emoji: "🚗" },
 ];
 
 interface Props {
@@ -69,7 +69,7 @@ export function InstagramFeed({ posts, loading }: Props) {
         {!loading && visible.length === 0 && (
           <div className="flex items-center justify-center rounded-2xl"
             style={{ width: "100%", height: 120, color: C.faint, fontSize: 13, fontWeight: 600 }}>
-            No {filter === "all" ? "" : (TRANSPORT_LABELS[filter as string]?.label ?? filter)} posts yet
+            No {filter === "all" ? "" : TRANSPORT_LABELS[filter].label} posts yet
           </div>
         )}
 

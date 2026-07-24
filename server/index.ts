@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import igAuthRouter from "./routes/auth/instagram";
 import ptAuthRouter from "./routes/auth/pinterest";
 import geocodingRouter from "./routes/geocoding";
+import travelRouter from "./routes/travel";
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ app.use("/auth/pinterest", ptAuthRouter);
 
 // ── Geocoding proxy ──────────────────────────────────────────────────────────
 app.use("/api/geocode", geocodingRouter);
+
+// ── Travel node pipeline (caption parsing + geocoding) ───────────────────────
+app.use("/api/travel", travelRouter);
 
 // ── Instagram Graph API proxy ─────────────────────────────────────────────────
 app.get("/api/instagram/me", (req, res) => {

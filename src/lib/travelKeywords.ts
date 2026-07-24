@@ -1,48 +1,45 @@
-export type TransportMode = "flight" | "boat" | "train" | "road" | null;
+/**
+ * Client-side mirror of the server's transit vocabulary.
+ *
+ * Detection itself lives on the server (server/services/transitDetector.ts) so
+ * there is one source of truth; this module only carries the shared type and
+ * the display metadata the UI needs. `detectTransport` remains for posts that
+ * arrive from a cache without a server-assigned mode.
+ */
 
-const FLIGHT = [
-  "✈️", "flight", "boarding", "takeoff", "landed", "airport", "layover",
-  "terminal", "jetlagged", "airborne", "runway", "#flightmode", "#flying",
-  "#intheair", "#travel", "departures", "arrivals",
-];
+export type TransitMode = "flight" | "boat" | "train" | "drive" | "stay";
 
-const BOAT = [
-  "⛵", "🚢", "cruise", "sailing", "yacht", "ferry", "ship", "aboard",
-  "portside", "marina", "anchor", "nautical", "#sailing", "#cruiselife",
-  "#yachtlife", "sea day", "ocean liner",
-];
+/** @deprecated Use TransitMode. Kept so older imports keep compiling. */
+export type TransportMode = TransitMode;
 
-const TRAIN = [
-  "🚂", "🚆", "train", "rail", "amtrak", "eurostar", "shinkansen", "tgv",
-  "intercity", "railway", "locomotive", "#traintravel", "#trainride",
-  "on the rails", "station", "platform",
-];
-
-const ROAD = [
-  "🚗", "🛣️", "roadtrip", "road trip", "driving", "highway", "interstate",
-  "miles driven", "#vanlife", "#roadtrip", "on the road",
-];
-
-function hits(text: string, keywords: string[]): number {
-  const lower = text.toLowerCase();
-  return keywords.filter((k) => lower.includes(k.toLowerCase())).length;
-}
-
-export function detectTransport(caption: string, hashtags: string[] = []): TransportMode {
-  const full = `${caption} ${hashtags.join(" ")}`;
-  const scores: Record<TransportMode & string, number> = {
-    flight: hits(full, FLIGHT),
-    boat: hits(full, BOAT),
-    train: hits(full, TRAIN),
-    road: hits(full, ROAD),
-  };
-  const winner = (Object.entries(scores) as [string, number][]).sort((a, b) => b[1] - a[1])[0];
-  return winner[1] > 0 ? (winner[0] as TransportMode) : null;
-}
-
-export const TRANSPORT_LABELS: Record<string, { emoji: string; label: string }> = {
+export const TRANSPORT_LABELS: Record<TransitMode, { emoji: string; label: string }> = {
   flight: { emoji: "✈️", label: "Flight" },
   boat: { emoji: "⛵", label: "Boat" },
   train: { emoji: "🚂", label: "Train" },
-  road: { emoji: "🚗", label: "Road trip" },
+  drive: { emoji: "🚗", label: "Road trip" },
+  stay: { emoji: "📍", label: "Stay" },
 };
+
+/** Modes that represent movement, i.e. worth drawing as a leg on the map. */
+export const MOVING_MODES: TransitMode[] = ["flight", "boat", "train", "drive"];
+
+const QUICK_RULES: Record<Exclude<TransitMode, "stay">, RegExp> = {
+  flight: /\b(flight|flights|flying|flew|plane|airplane|airline)\b|✈|🛫|🛬|#flight\b/i,
+  boat: /\b(boat|boats|ferry|ferries|sailing|cruise|cruising|yacht)\b|⛵|🚢|🛳|#sailing\b/i,
+  train: /\b(train|trains|rail|railway|amtrak|eurostar|shinkansen)\b|🚂|🚆|🚄|#traintravel\b/i,
+  drive: /\b(roadtrip|road\s+trip|driving|drove|campervan)\b|🚗|🚙|🛣|#vanlife\b/i,
+};
+
+/**
+ * Lightweight fallback detector. The server version is more accurate — prefer
+ * the `transitMode` field returned by /api/travel/nodes when it is present.
+ */
+export function detectTransport(caption: string, hashtags: string[] = []): TransitMode {
+  const text = `${caption} ${hashtags.join(" ")}`;
+  for (const mode of MOVING_MODES) {
+    if (mode !== "stay" && QUICK_RULES[mode as Exclude<TransitMode, "stay">].test(text)) {
+      return mode;
+    }
+  }
+  return "stay";
+}
