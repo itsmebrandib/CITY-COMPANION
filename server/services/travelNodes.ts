@@ -37,6 +37,8 @@ export interface TripNode {
   instagramPostUrl: string;
   mediaUrl: string | null;
   timestamp: string;
+  /** Original caption, retained so the map InfoWindow can show a snippet. */
+  caption: string | null;
 }
 
 export interface TripNodeMeta {
@@ -117,6 +119,7 @@ export async function buildTripNode(
       instagramPostUrl: post.permalink,
       mediaUrl: pickMediaUrl(post),
       timestamp: post.timestamp,
+      caption: caption || null,
       meta: {
         mapped: true,
         geocodeStatus: "ok",
@@ -141,6 +144,7 @@ export async function buildTripNode(
     instagramPostUrl: post.permalink,
     mediaUrl: pickMediaUrl(post),
     timestamp: post.timestamp,
+    caption: caption || null,
     meta: {
       mapped: geo.status === "ok",
       geocodeStatus: geo.status,
@@ -205,6 +209,7 @@ export async function buildTripNodes(
         instagramPostUrl: post?.permalink ?? "",
         mediaUrl: null,
         timestamp: post?.timestamp ?? new Date(0).toISOString(),
+        caption: post?.caption ?? null,
         meta: {
           mapped: false,
           geocodeStatus: "network_error",

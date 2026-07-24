@@ -159,9 +159,26 @@ async function main() {
     const n = result.nodes.find((x) => x.id === "1")!;
     const { meta, ...bare } = n;
     assert.deepEqual(Object.keys(bare).sort(), [
-      "id", "instagramPostUrl", "lat", "lng",
+      "caption", "id", "instagramPostUrl", "lat", "lng",
       "locationName", "mediaUrl", "timestamp", "transitMode",
     ].sort());
+  });
+  await test("caption is carried through for the InfoWindow", () => {
+    assert.equal(result.nodes.find((n) => n.id === "1")!.caption, "Wheels up ✈️ #flight");
+  });
+  await test("missing caption becomes null, not undefined", async () => {
+    const [node] = (
+      await buildTripNodes([
+        {
+          id: "4",
+          permalink: "https://instagram.com/p/4",
+          timestamp: "2026-03-04T08:00:00+0000",
+          location: { name: "Kyoto", latitude: 35.0116, longitude: 135.7681 },
+        },
+      ])
+    ).nodes;
+    assert.strictEqual(node.caption, null);
+    assert.equal(node.transitMode, "stay");
   });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
